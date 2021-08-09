@@ -9,9 +9,12 @@ import (
 	"os/exec"
 	"syscall"
 	"unsafe"
+	"time"
 
 	"github.com/gliderlabs/ssh"
 	"github.com/creack/pty"
+	gossh "golang.org/x/crypto/ssh"
+	"github.com/xlzd/gotp"
 )
 
 func setWinsize(f *os.File, w, h int) {
@@ -24,10 +27,46 @@ func main() {
 	if ! hasBinary {
 		log.Fatalln("SSH_BINARY not set")
 	}
+	address, hasAddress := os.LookupEnv("SSH_ADDRESS")
+	if ! hasAddress {
+		log.Fatalln("SSH_ADDRESS not set")
+	}
 	hostkey, hasHostkey := os.LookupEnv("SSH_HOSTKEY")
 	if ! hasHostkey {
 		log.Fatalln("SSH_HOSTKEY not set")
 	}
+	otpFile, hasOtpFile := os.LookupEnv("SSH_OTPFILE")
+	if ! hasOtpFile {
+		log.Fatalln("SSH_OTPFILE not set")
+	}
+
+	f, err := os.Create(otpFile)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer f.Close()
+
+	secretLength := 16
+	secret := gotp.RandomSecret(secretLength)
+	otp := gotp.NewDefaultHOTP(secret)
+	counter := 0
+
+	go func() {
+		for {
+			value := otp.At(counter)
+
+			fmt.Printf("OTP code is now %s\n", value)
+			_, err := f.WriteString(value + "\n")
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			time.Sleep(60 * time.Second)
+			counter += 1
+
+		}
+	}()
 
 	ssh.Handle(func(s ssh.Session) {
 		cmd := exec.Command(binary)
@@ -55,6 +94,15 @@ func main() {
 		}
 	})
 
-	log.Printf("starting ssh server on port 2222 with binary %s and hostkey %s ...\n", binary, hostkey)
-	log.Fatal(ssh.ListenAndServe(":2222", nil, ssh.HostKeyFile(hostkey)))
+	interactiveOption := ssh.KeyboardInteractiveAuth(func(ctx ssh.Context, challenge gossh.KeyboardInteractiveChallenge) bool {
+		answers, err := challenge("", "", []string{"Enter OTP code: "}, []bool{true})
+		if err != nil {
+			fmt.Printf("Got error while challenging: %s\n", err)
+			return false
+		}
+		return otp.Verify(answers[0], counter)
+	})
+
+	log.Printf("starting ssh server on %s with binary %s and hostkey %s, writing the otp password to %s...\n", address, binary, hostkey, otpFile)
+	log.Fatal(ssh.ListenAndServe(address, nil, ssh.HostKeyFile(hostkey), interactiveOption))
 }
