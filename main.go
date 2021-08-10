@@ -23,10 +23,12 @@ func setWinsize(f *os.File, w, h int) {
 }
 
 func main() {
-	binary, hasBinary := os.LookupEnv("SSH_BINARY")
-	if ! hasBinary {
-		log.Fatalln("SSH_BINARY not set")
+	if len(os.Args) < 2 {
+		log.Fatalln("No arguments provided for command to run for connections")
 	}
+	binary := os.Args[1]
+	args := os.Args[2:]
+
 	address, hasAddress := os.LookupEnv("SSH_ADDRESS")
 	if ! hasAddress {
 		log.Fatalln("SSH_ADDRESS not set")
@@ -70,6 +72,7 @@ func main() {
 
 	ssh.Handle(func(s ssh.Session) {
 		cmd := exec.Command(binary)
+		cmd.Args = append(cmd.Args, args...)
 		ptyReq, winCh, isPty := s.Pty()
 		if isPty {
 			cmd.Env = append(os.Environ(), fmt.Sprintf("TERM=%s", ptyReq.Term))
@@ -103,6 +106,6 @@ func main() {
 		return otp.Verify(answers[0], counter)
 	})
 
-	log.Printf("starting ssh server on %s with binary %s and hostkey %s, writing the otp password to %s...\n", address, binary, hostkey, otpFile)
+	log.Printf("starting ssh server on %s with hostkey %s, writing the otp password to %s...\n", address, hostkey, otpFile)
 	log.Fatal(ssh.ListenAndServe(address, nil, ssh.HostKeyFile(hostkey), interactiveOption))
 }
