@@ -9,12 +9,12 @@ import (
 	"os/exec"
 	"syscall"
 	"unsafe"
-	"time"
+	"io/ioutil"
+	"strings"
 
 	"github.com/gliderlabs/ssh"
 	"github.com/creack/pty"
 	gossh "golang.org/x/crypto/ssh"
-	"github.com/xlzd/gotp"
 )
 
 func setWinsize(f *os.File, w, h int) {
@@ -37,38 +37,16 @@ func main() {
 	if ! hasHostkey {
 		log.Fatalln("SSH_HOSTKEY not set")
 	}
-	otpFile, hasOtpFile := os.LookupEnv("SSH_OTPFILE")
-	if ! hasOtpFile {
-		log.Fatalln("SSH_OTPFILE not set")
+	passwordFile, hasPasswordFile := os.LookupEnv("SSH_PASSWORD_FILE")
+	if ! hasPasswordFile {
+		log.Fatalln("SSH_PASSWORD_FILE not set")
 	}
 
-	f, err := os.Create(otpFile)
+	content, err := ioutil.ReadFile(passwordFile)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatalln(err)
 	}
-	defer f.Close()
-
-	secretLength := 16
-	secret := gotp.RandomSecret(secretLength)
-	otp := gotp.NewDefaultHOTP(secret)
-	counter := 0
-
-	go func() {
-		for {
-			value := otp.At(counter)
-
-			fmt.Printf("OTP code is now %s\n", value)
-			_, err := f.WriteString(value + "\n")
-			if err != nil {
-				log.Fatalln(err)
-			}
-
-			time.Sleep(60 * time.Second)
-			counter += 1
-
-		}
-	}()
+	password := strings.Trim(string(content), "\n")
 
 	ssh.Handle(func(s ssh.Session) {
 		cmd := exec.Command(binary)
@@ -98,14 +76,14 @@ func main() {
 	})
 
 	interactiveOption := ssh.KeyboardInteractiveAuth(func(ctx ssh.Context, challenge gossh.KeyboardInteractiveChallenge) bool {
-		answers, err := challenge("", "", []string{"Enter OTP code: "}, []bool{true})
+		answers, err := challenge("", "", []string{"Enter password: "}, []bool{true})
 		if err != nil {
 			fmt.Printf("Got error while challenging: %s\n", err)
 			return false
 		}
-		return otp.Verify(answers[0], counter)
+		return answers[0] == password
 	})
 
-	log.Printf("starting ssh server on %s with hostkey %s, writing the otp password to %s...\n", address, hostkey, otpFile)
+	log.Printf("starting ssh server on %s...\n", address)
 	log.Fatal(ssh.ListenAndServe(address, nil, ssh.HostKeyFile(hostkey), interactiveOption))
 }

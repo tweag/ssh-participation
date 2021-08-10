@@ -3,10 +3,13 @@ let
   pkg = pkgs.buildGoModule {
     name = "ssh-forward";
     src = ./.;
-    vendorSha256 = "0rabkf98y38hyzvdmv1kblc13z8dljgcqqp32xhrrkiam50957k9";
+    vendorSha256 = "0kmcsr1g08gjw8xn6xbp3jwfmv8xr936sxsk9365ph6fj44rfd6z";
   };
   shell = pkgs.mkShell {
     inputsFrom = [ pkg ];
-    nativeBuildInputs = [ pkgs.gopls ];
+    nativeBuildInputs = [
+      pkgs.gopls
+      pkgs.diceware
+    ];
   };
 in if isShell then shell else pkg
