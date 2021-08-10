@@ -18,6 +18,17 @@ Env var available in the called command:
 nix-build
 ```
 
+## Installation
+
+```nix
+{
+  imports = [
+    ./path/to/ssh-participation/module.nix
+  ];
+  services.ssh-participation.enable = true;
+}
+```
+
 ## Running for development
 
 ```
