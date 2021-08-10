@@ -18,7 +18,7 @@ let
     fi
 
     # Log into the user, which should now exist and be a participating user
-    exec su - "$SSH_USER"
+    exec machinectl --quiet shell "$SSH_USER"@
   '';
 in {
   options.services.ssh-participation = {
