@@ -10,6 +10,7 @@ let
     if ! group=$(id -gn "$SSH_USER" 2>/dev/null); then
       # This fails if the user doesn't exist, so create it
       useradd -b /home/participants -m -g participants "$SSH_USER"
+      chmod g+rX /home/participants/"$SSH_USER"
     elif [[ ! "$group" == participants ]]; then
       # If the user exists, but its primary group is not participants, we don't allow users to log into it
       echo "User \"$SSH_USER\" cannot be used to participate with"
