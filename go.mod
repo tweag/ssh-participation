@@ -1,4 +1,4 @@
-module github.com/infinisil/module-ssh-server
+module github.com/tweag/ssh-participation
 
 go 1.16
 

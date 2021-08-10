@@ -1,6 +1,6 @@
 { lib, pkgs, config, ... }:
 let
-  ssh-forward = import ./default.nix { inherit pkgs; };
+  ssh-participation = import ./default.nix { inherit pkgs; };
   cfg = config.services.ssh-participation;
 
   login = pkgs.writeShellScript "login" ''
@@ -52,7 +52,7 @@ in {
       serviceConfig = {
         User = "bouncer";
         Group = "bouncer";
-        ExecStart = "${ssh-forward}/bin/module-ssh-server sudo -E ${login}";
+        ExecStart = "${ssh-participation}/bin/ssh-participation sudo -E ${login}";
         StateDirectory = "bouncer";
         WorkingDirectory = "%S/bouncer";
         AmbientCapabilities = "CAP_NET_BIND_SERVICE";
