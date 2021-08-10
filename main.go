@@ -72,7 +72,7 @@ func main() {
 		cmd := exec.Command(binary)
 		ptyReq, winCh, isPty := s.Pty()
 		if isPty {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("TERM=%s", ptyReq.Term))
+			cmd.Env = append(os.Environ(), fmt.Sprintf("TERM=%s", ptyReq.Term))
 			cmd.Env = append(cmd.Env, fmt.Sprintf("SSH_USER=%s", s.User()))
 			f, err := pty.Start(cmd)
 			if err != nil {
