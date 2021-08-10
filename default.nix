@@ -3,7 +3,7 @@ let
   pkg = pkgs.buildGoModule {
     name = "ssh-participation";
     src = ./.;
-    vendorSha256 = "0kmcsr1g08gjw8xn6xbp3jwfmv8xr936sxsk9365ph6fj44rfd6z";
+    vendorSha256 = "0zh9p6vmwbxx30v78vq55hpdwy0wcdl9i5a6qjkvf845w6n4kcnq";
   };
   shell = pkgs.mkShell {
     inputsFrom = [ pkg ];

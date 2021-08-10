@@ -12,7 +12,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/gliderlabs/ssh"
+	"github.com/tweag/gliderlabs-ssh"
 	"github.com/creack/pty"
 	gossh "golang.org/x/crypto/ssh"
 )
