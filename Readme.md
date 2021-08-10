@@ -2,6 +2,8 @@
 
 This is a very simple SSH server for allowing users to easily participate in an interactive demo. It allows logging in with arbitrary usernames, creating a new user on-the-fly and giving the user a shell for it. A shared password among all users is used for authentication.
 
+:warning: Note that this was created hastily and as a consequence might have some problems
+
 ## Usage
 
 Enable the NixOS module with
