@@ -1,6 +1,5 @@
-{ isShell ? false }:
+{ pkgs ? import <nixpkgs> {}, isShell ? false }:
 let
-  pkgs = import ../nixpkgs.nix;
   pkg = pkgs.buildGoModule {
     name = "ssh-forward";
     src = ./.;
