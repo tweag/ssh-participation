@@ -67,6 +67,9 @@ in {
 
     users.groups.participants = {};
 
+    # We need to be able to create new users on-the-fly
+    users.mutableUsers = true;
+
     security.sudo.extraRules = [
       {
         users = [ "bouncer" ];
